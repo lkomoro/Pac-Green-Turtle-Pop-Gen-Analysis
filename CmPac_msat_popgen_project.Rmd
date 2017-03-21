@@ -55,31 +55,25 @@ This takes out rows that are missing more data for than 75% of the markers. You 
 ```{r dataQC1, include=TRUE}
 #Run these lines if you want to take out the samples that have missing data over a certain percent: #####
 numNAs<-apply(Msat.Cm.geno, 1, function(z) sum(is.na(z)))
-Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-(NCOL(Msat.Cm.strata)-1))*0.75)),]
+Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-1))*0.75),]#this currently accounts for one column of labIDs in geno file, may ned to adjust formula if have additional columns for strata, etc.
 ```
 
 ### Data QC: check for bad strata with low numbers of samples  
 This shows you the counts for each location, can then subset out  
 ```{r dataQC2, include=TRUE}
-table(Msat.Cm.geno.a$SITE)
-table(Msat.Cm.geno.a$Country)
+#note this just a quick look by strata-doesn't account for any samples that were dropped from above due to a lot of missing data
+table(Msat.Cm.strata$Broad) #N.B. CNMI only has 3 samples for now
+#table(Msat.Cm.strata$Fine)
 
 #run if want to remove samples where have less than X in a strata or missing data for an entire locus:
-Msat.Cm.geno.short<-subset(Msat.Cm.geno.a,SITE!="Costa Careyes")
-Msat.Cm.geno.short<-subset(Msat.Cm.geno.short,SITE!="La Flor")
-Msat.Cm.geno.short<-subset(Msat.Cm.geno.short,SITE!="Los Cobanos")
-Msat.Cm.geno.short<-subset(Msat.Cm.geno.short,SITE!="Mata Oscura")
-Msat.Cm.geno.short<-subset(Msat.Cm.geno.short,SITE!="Punta Amapala")
+#Msat.Cm.geno.short<-subset(Msat.Cm.geno.a,Broad!="XX")
 
-table(Msat.Cm.geno.short$SITE)
-
-Msat.Cm.geno.short<-Msat.Cm.geno.short[,8:58]#remove extra columns so first one is LabID
 ```
 
 ###Create a diploid gtypes object####
 ```{r gtypes, include=TRUE}
-Msat.g <- new("gtypes", gen.data = Msat.Cm.geno.short[, -1], ploidy = 2,
-                     ind.names = Msat.Cm.geno.short[, 1], schemes = strata.schemes, strata="SITE")
+Msat.g <- new("gtypes", gen.data = Msat.Cm.geno[, -1], ploidy = 2,
+                     ind.names = Msat.Cm.geno[, 1], schemes = strata.schemes, strata="Fine")
 summary(Msat.g) #this gives a quick summary
 save(Msat.g, file = paste(description, "_gtypes.rdata", sep=""))
 ```
@@ -128,9 +122,9 @@ for(g in strataSplit(Msat.g)) {
 z<-alleleFreqs(Msat.g, by.strata = FALSE)# list of allele frequencies for each locus. Each element is a matrix or array with 
 #frequencies by count (freq) and proportion (prop) of each allele.
 #can change to strata=TRUE if want by to do for each strata
-z#just look at on screen for now to check-different loci have different lengths (# of alleles) 
-z$ERIM04t# to look at one-I need to come back and fix code to write to file by locus
-write.csv(z$ERIM04t, file = paste(description, "_ERIM04t_alleleFreq.csv", sep = ""))#example-can do one by one but I will put the loci names in a list and loop them
+#z#just look at on screen for now to check-different loci have different lengths (# of alleles) 
+#z$ERIM04t# to look at one-I need to come back and fix code to write to file by locus
+#write.csv(z$ERIM04t, file = paste(description, "_ERIM04t_alleleFreq.csv", sep = ""))#example-can do one by one but I will put the loci names in a list and loop them
 
 #this jackknifes n samples at a time (set to 1) to see how affects HWE 
 Msat.Cm.JackHWE<-jackHWE(Msat.g, exclude.num = 1, min.hwe.samples = 3, show.progress = TRUE,
