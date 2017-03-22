@@ -31,7 +31,7 @@ getwd()#this just double checks that you are where you wanted to be
 description <- "CmMsat_2017-03-21_EDA"
 strata.file <- "Cm_Pac_strata_032117.csv"
 genotypes.file <- "Cm_Pac_genodata_032117.csv"
-geno.data.start<-1 #make this number match the last column before genotype data
+geno.data.start<-3 #make this number match the last column before genotype data
 #read in data ####
 Msat.Cm.geno <- readGenData(genotypes.file) #analysis set export with population column removed
 #Msat.Cm.geno<-subset(Msat.Cm.geno,Dups=="N")#remove previously identified/marked duplicates
@@ -51,20 +51,22 @@ View(Msat.Cm.geno)
 
 ###Data QC: Check for samples missing a lot of data  
 This takes out rows that are missing more data for than 75% of the markers. You can change the percent in the formula as you like (right now is 0.75 above).  
-***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 75% of the loci have NAs-we have data for less than 25% of the markers)***
+***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 25% of the loci have NAs-we have data for less than 75% of the markers)***
 ```{r dataQC1, include=TRUE}
 #Run these lines if you want to take out the samples that have missing data over a certain percent: #####
 numNAs<-apply(Msat.Cm.geno, 1, function(z) sum(is.na(z)))
-Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-geno.data.start))*0.75),]
-#no samples removed so can use original df
+Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-geno.data.start))*0.25),]
+
 ```
 
 ### Data QC: check for bad strata with low numbers of samples  
 This shows you the counts for each location, can then subset out  
 ```{r dataQC2, include=TRUE}
+dir.create(description)#makes a directory to put all your output files for organization purposes
+setwd(paste(getwd(),"/",description,sep=""))#change your WD so all files get put there from this run
 #note this just a quick look by strata-doesn't account for any samples that were dropped from above due to a lot of missing data
-table(Msat.Cm.strata$Broad) #N.B. CNMI only has 3 samples for now
-#table(Msat.Cm.strata$Fine)
+t1<-table(Msat.Cm.geno.a$Fine) 
+write.csv(t1, file = paste(description, "_counts_bystrata_afterNAremoval.csv", sep = ""))
 
 #run if want to remove samples where have less than X in a strata or missing data for an entire locus:
 #Msat.Cm.geno.short<-subset(Msat.Cm.geno.a,Broad!="XX")
@@ -73,7 +75,7 @@ table(Msat.Cm.strata$Broad) #N.B. CNMI only has 3 samples for now
 
 ###Create a diploid gtypes object####
 ```{r gtypes, include=TRUE}
-Msat.g <- df2gtypes(Msat.Cm.geno, ploidy = 2, id.col=1, loc.col=2,schemes = strata.schemes)
+Msat.g <- df2gtypes(Msat.Cm.geno.a, ploidy = 2, id.col=3, loc.col=4,schemes = strata.schemes)
 Msat.g <- stratify(Msat.g, "Fine")
 summary(Msat.g) #this gives a quick summary
 save(Msat.g, file = paste(description, "_gtypes.rdata", sep=""))
@@ -84,7 +86,6 @@ save(Msat.g, file = paste(description, "_gtypes.rdata", sep=""))
 ### Test for all QA/QC tests: locus summaries, check for duplicates, HWE, etc.  
 ```{r gtypesQAQC, include=TRUE}
 qaqc(Msat.g, label = paste(description, "_QC_results", sep=""), num.shared = 0.9) 
-
 #Note-in the locus summary files:
 #1 the propUniqueAlleles is more useful for haplotype (mitochondrial) bc it is the percentage of alleles at that locus that only occur once (so for diploid markers, this=one individual is heterozygous)
 #2 the allelic richness of each locus calculated as the number of alleles divided by the number of samples without missing data at that locus.
@@ -121,12 +122,13 @@ for(g in strataSplit(Msat.g)) {
 }# or use this if want to run and bind multiple things together that have the same dimensions
 
 #Allele Frequencies:
-z<-alleleFreqs(Msat.g, by.strata = FALSE)# list of allele frequencies for each locus. Each element is a matrix or array with 
-#frequencies by count (freq) and proportion (prop) of each allele.
+AF<-alleleFreqs(Msat.g, by.strata = FALSE)# list of allele frequencies for each locus. Each element is a matrix or array with frequencies by count (freq) and proportion (prop) of each allele.
 #can change to strata=TRUE if want by to do for each strata
-#z#just look at on screen for now to check-different loci have different lengths (# of alleles) 
-#z$ERIM04t# to look at one-I need to come back and fix code to write to file by locus
-#write.csv(z$ERIM04t, file = paste(description, "_ERIM04t_alleleFreq.csv", sep = ""))#example-can do one by one but I will put the loci names in a list and loop them
+AF1<-alleleFreqs(Msat.g, by.strata = TRUE)
+
+
+# to look at one-I need to come back and fix code to write to file by locus
+write.csv(AF1$D2, file = paste(description, "_D2_alleleFreq.csv", sep = ""))#example-can do one by one but I will put the loci names in a list and loop them
 
 #this jackknifes n samples at a time (set to 1) to see how affects HWE 
 Msat.Cm.JackHWE<-jackHWE(Msat.g, exclude.num = 1, min.hwe.samples = 3, show.progress = TRUE,
