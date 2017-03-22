@@ -123,12 +123,16 @@ for(g in strataSplit(Msat.g)) {
 
 #Allele Frequencies:
 AF<-alleleFreqs(Msat.g, by.strata = FALSE)# list of allele frequencies for each locus. Each element is a matrix or array with frequencies by count (freq) and proportion (prop) of each allele.
-#can change to strata=TRUE if want by to do for each strata
-AF1<-alleleFreqs(Msat.g, by.strata = TRUE)
-
-
-# to look at one-I need to come back and fix code to write to file by locus
-write.csv(AF1$D2, file = paste(description, "_D2_alleleFreq.csv", sep = ""))#example-can do one by one but I will put the loci names in a list and loop them
+for(loc in names(AF)) {
+  fname <- paste(description, loc, "overall_allele.freqs.csv", sep = "_")
+  write.csv(AF[[loc]], file = fname)
+}
+#strata=TRUE if want by to do for each strata
+af <- alleleFreqs(Msat.g, by.strata=T)
+for(loc in names(af)) {
+  fname <- paste(description, loc, "bystrata_allele.freqs.csv", sep = "_")
+  write.csv(af[[loc]][, "freq", ], file = fname)
+}
 
 #this jackknifes n samples at a time (set to 1) to see how affects HWE 
 Msat.Cm.JackHWE<-jackHWE(Msat.g, exclude.num = 1, min.hwe.samples = 3, show.progress = TRUE,
