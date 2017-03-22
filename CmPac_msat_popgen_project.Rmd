@@ -31,7 +31,7 @@ getwd()#this just double checks that you are where you wanted to be
 description <- "CmMsat_2017-03-21_EDA"
 strata.file <- "Cm_Pac_strata_032117.csv"
 genotypes.file <- "Cm_Pac_genodata_032117.csv"
-
+geno.data.start<-1 #make this number match the last column before genotype data
 #read in data ####
 Msat.Cm.geno <- readGenData(genotypes.file) #analysis set export with population column removed
 #Msat.Cm.geno<-subset(Msat.Cm.geno,Dups=="N")#remove previously identified/marked duplicates
@@ -55,7 +55,8 @@ This takes out rows that are missing more data for than 75% of the markers. You 
 ```{r dataQC1, include=TRUE}
 #Run these lines if you want to take out the samples that have missing data over a certain percent: #####
 numNAs<-apply(Msat.Cm.geno, 1, function(z) sum(is.na(z)))
-Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-1))*0.75),]#this currently accounts for one column of labIDs in geno file, may ned to adjust formula if have additional columns for strata, etc.
+Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-geno.data.start))*0.75),]
+#no samples removed so can use original df
 ```
 
 ### Data QC: check for bad strata with low numbers of samples  
@@ -72,11 +73,12 @@ table(Msat.Cm.strata$Broad) #N.B. CNMI only has 3 samples for now
 
 ###Create a diploid gtypes object####
 ```{r gtypes, include=TRUE}
-Msat.g <- new("gtypes", gen.data = Msat.Cm.geno[, -1], ploidy = 2,
-                     ind.names = Msat.Cm.geno[, 1], schemes = strata.schemes, strata="Fine")
+Msat.g <- df2gtypes(Msat.Cm.geno, ploidy = 2, id.col=1, loc.col=2,schemes = strata.schemes)
+Msat.g <- stratify(Msat.g, "Fine")
 summary(Msat.g) #this gives a quick summary
 save(Msat.g, file = paste(description, "_gtypes.rdata", sep=""))
 ```
+
 **Note-amend to do for ones with/without small groups removed, etc.**
 
 ### Test for all QA/QC tests: locus summaries, check for duplicates, HWE, etc.  
