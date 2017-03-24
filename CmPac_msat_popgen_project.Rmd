@@ -50,7 +50,7 @@ View(Msat.Cm.geno)
 ```
 
 ###Data QC: Check for samples missing a lot of data  
-This takes out rows that are missing more data for than 75% of the markers. You can change the percent in the formula as you like (right now is 0.75 above).  
+This takes out cases that are missing more data for than X% of the markers. You can change the percent in the formula as you like.  
 ***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 25% of the loci have NAs-we have data for less than 75% of the markers)***
 ```{r dataQC1, include=TRUE}
 #Run these lines if you want to take out the samples that have missing data over a certain percent: #####
