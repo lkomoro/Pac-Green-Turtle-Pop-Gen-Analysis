@@ -1,7 +1,7 @@
 ---
 title: "Cm_Pac_msat_EDA"
 author: "Lisa Komoroske"
-date: "March 21, 2017"
+date: "Nov 14, 2017"
 output: html_document
 ---
 
@@ -28,9 +28,9 @@ getwd()#this just double checks that you are where you wanted to be
 ###Intro: set keys and load data
 ```{r intro, include=TRUE}
 
-description <- "CmMsat_2017-03-21_EDA"
-strata.file <- "Cm_Pac_strata_032117.csv"
-genotypes.file <- "Cm_Pac_genodata_032117.csv"
+description <- "Pac_CmMsat_2017-11-14_EDA"
+strata.file <- "Pac_Cm_Strata_111317.csv"
+genotypes.file <- "Pac_Cm_genodata_111317.csv"
 geno.data.start<-3 #make this number match the last column before genotype data
 #read in data ####
 Msat.Cm.geno <- readGenData(genotypes.file) #analysis set export with population column removed
@@ -51,11 +51,11 @@ View(Msat.Cm.geno)
 
 ###Data QC: Check for samples missing a lot of data  
 This takes out cases that are missing more data for than X% of the markers. You can change the percent in the formula as you like.  
-***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 25% of the loci have NAs-we have data for less than 75% of the markers)***
+***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 30% of the loci have NAs-we have data for less than 70% of the markers)***
 ```{r dataQC1, include=TRUE}
 #Run these lines if you want to take out the samples that have missing data over a certain percent: #####
 numNAs<-apply(Msat.Cm.geno, 1, function(z) sum(is.na(z)))
-Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-geno.data.start))*0.25),]
+Msat.Cm.geno.a<-Msat.Cm.geno[!(numNAs>((ncol(Msat.Cm.geno)-geno.data.start))*0.3),]#Sue, I reset this to 0.3 because that is equivalent to 6 missing alleles (i.e., max you can be missing is 3 markers-I looked quickly didn't see any cases where only one allele was scored for a marker...if this is not the case you can adjust the criteria here)
 
 ```
 
