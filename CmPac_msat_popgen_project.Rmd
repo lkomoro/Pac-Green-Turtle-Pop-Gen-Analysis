@@ -9,7 +9,7 @@ Intro: This script is for QA/QC and basic population structure analyses using th
 
 This is meant to be a template/example that can be amended for other datasets-(currently code matches a Cm turtle microsatellite dataset)  
 
-###Setup: Load packages etc
+### Setup: Load packages etc
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 # make sure you have Rtools installed
@@ -25,7 +25,7 @@ options(stringsAsFactors = F)
 getwd()#this just double checks that you are where you wanted to be
 ```
 
-###Intro: set keys and load data
+### Intro: set keys and load data
 ```{r intro, include=TRUE}
 
 description <- "Pac_CmMsat_2017-11-14_EDA"
@@ -49,7 +49,7 @@ Msat.Cm.geno[Msat.Cm.geno==0]=NA
 View(Msat.Cm.geno)
 ```
 
-###Data QC: Check for samples missing a lot of data  
+### Data QC: Check for samples missing a lot of data  
 This takes out cases that are missing more data for than X% of the markers. You can change the percent in the formula as you like.  
 ***(Note that we are counting the NAs, so the percent is the inversion, i.e. if more than 30% of the loci have NAs-we have data for less than 70% of the markers)***
 ```{r dataQC1, include=TRUE}
@@ -73,7 +73,7 @@ write.csv(t1, file = paste(description, "_counts_bystrata_afterNAremoval.csv", s
 
 ```
 
-###Create a diploid gtypes object####
+### Create a diploid gtypes object####
 ```{r gtypes, include=TRUE}
 Msat.g <- df2gtypes(Msat.Cm.geno.a, ploidy = 2, id.col=3, loc.col=4,schemes = strata.schemes)
 Msat.g <- stratify(Msat.g, "Fine")
@@ -176,6 +176,6 @@ write.csv(oh, paste(description, "_Ho.csv", sep = ""))
 #oh here is the same as that found in the qaqc output files, this just makes it available for easy graphing manipulation
 ```
 
-###Follow up scripts:
+### Follow up scripts:
 1. See 'Genetic_graphs_EA_LK_incorporated.rmd' in Pop genomics repository -Genetics graphs- integrating StrataG and ggplots to generate graphics of interest for basic genetic analyses:add in as needed here.
 2. STRUCTURE, PHASE scripts-to run these other programs through StrataG:add in as needed here.
